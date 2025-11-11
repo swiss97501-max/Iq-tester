@@ -1,160 +1,177 @@
-/* ==========================
-   ตัวแปรเริ่มต้น
-   ========================== */
-let currentQuestion = 0;
-let userAnswers = [];
-let totalQuestions = 15; // Logic 10 + Open 5
-let iqScore = 0;
-
+// ====== DATA ======
+// Logic questions (คำตอบเป็นตัวเลข)
 const logicQuestions = [
-  "2, 3, 5, 9, 17, 33, ?",
-  "12 → 21, 23 → 38, 34 → 57, 45 → ?",
-  "1, 2, 6, 21, 88, ?",
-  "[1 2; 3 4] → 10, [2 3; 4 5] → 14, [3 4; 5 6] → ?",
-  "15 → 7, 28 → 13, 45 → 19, 66 → ?",
-  "1, 2, 4, 12, 48, 240, ?",
-  "1, 1, 2, 6, 24, 120, 720, 5040, ?",
-  "7, 14, 28, 56, 112, ?",
-  "5, 10, 20, 40, 80, ?",
-  "11, 23, 47, 95, 191, ?"
+    { q: "135 = 65, 254 = 136, 312 = ?", a: "288" },
+    { q: "12, 23, 34, 45, ?", a: "56" },
+    { q: "7, 14, 28, 56, ?", a: "112" },
+    { q: "2, 3, 5, 9, 17, ?", a: "33" },
+    { q: "1, 4, 9, 16, 25, ?", a: "36" },
+    { q: "3, 6, 12, 24, 48, ?", a: "96" },
+    { q: "1, 2, 6, 24, 120, ?", a: "720" },
+    { q: "2, 5, 10, 17, 26, ?", a: "37" },
+    { q: "1, 1, 2, 6, 24, ?", a: "120" },
+    { q: "4, 9, 19, 39, 79, ?", a: "159" }
 ];
 
+// Open-ended questions
 const openQuestions = [
-  "ถ้าคุณถูกบังคับให้แก้ปัญหาที่ไม่มีทางแก้ คุณจะเริ่มจากตรงไหน?",
-  "หากคุณถูกทิ้งไว้บนเกาะร้าง มีเวลา 24 ชั่วโมง คุณจะทำอย่างไรให้รอดชีวิต?",
-  "คุณจะจัดการกับเพื่อนร่วมทีมที่ไม่ทำงานแต่ได้เครดิตเท่าคุณอย่างไร?",
-  "ถ้า AI ควบคุมโลก คุณจะหาวิธีสื่อสารหรือโต้แย้งมันอย่างไร?",
-  "จงออกแบบวิธีเรียนรู้สิ่งใหม่โดยไม่มีหนังสือหรืออินเทอร์เน็ต"
+    { q: "ถ้าคุณพบปัญหาซับซ้อน คุณจะจัดการอย่างไร?", a: "" },
+    { q: "เล่าประสบการณ์ที่คุณคิดว่าใช้ความคิดสร้างสรรค์สูงสุด", a: "" },
+    { q: "ถ้าคุณต้องตัดสินใจในสถานการณ์ยากๆ คุณจะทำอย่างไร?", a: "" },
+    { q: "คุณจะแก้ปัญหาที่ทีมไม่เห็นด้วยได้อย่างไร?", a: "" },
+    { q: "จงอธิบายวิธีคิดเชิงตรรกะของคุณในการแก้โจทย์", a: "" }
 ];
 
-let allQuestions = [...logicQuestions, ...openQuestions];
+// Merge all questions
+const allQuestions = [...logicQuestions, ...openQuestions];
+let currentQuestionIndex = 0;
+let answers = Array(allQuestions.length).fill("");
 
-/* ==========================
-   สร้าง dropdown เลือกข้อมูล
-   ========================== */
-window.onload = () => {
-  const ageSel = document.getElementById("age");
-  const hSel = document.getElementById("height");
-  const wSel = document.getElementById("weight");
-  for(let i=1;i<=140;i++){ ageSel.appendChild(new Option(i,i)); }
-  for(let i=30;i<=250;i++){ hSel.appendChild(new Option(i,i)); }
-  for(let i=3;i<=250;i++){ wSel.appendChild(new Option(i,i)); }
-};
+// ====== DOM Elements ======
+const profileForm = document.getElementById("profile-form");
+const quizSection = document.getElementById("quiz-section");
+const profileSection = document.getElementById("profile-section");
+const resultSection = document.getElementById("result-section");
+const certificateSection = document.getElementById("certificate-section");
 
-/* ==========================
-   เริ่มการทดสอบ
-   ========================== */
-function startTest() {
-    const userName = document.getElementById("name").value.trim();
-    if(userName === "") { alert("กรุณาใส่ชื่อของคุณก่อนเริ่มทดสอบ"); return; }
+const questionText = document.getElementById("question-text");
+const answerInput = document.getElementById("answer-input");
+const prevBtn = document.getElementById("prev-btn");
+const nextBtn = document.getElementById("next-btn");
+const progressFill = document.getElementById("progress-fill");
 
-    if(document.getElementById("hp_field").value !== "") {
-        alert("Bot detected! การทดสอบถูกยกเลิก");
-        return;
-    }
+const resultName = document.getElementById("result-name");
+const iqScore = document.getElementById("iq-score");
+const radarCanvas = document.getElementById("radarChart");
 
-    document.getElementById("profileSection").style.display = "none";
-    document.getElementById("quizSection").style.display = "block";
+const downloadBtn = document.getElementById("download-btn");
 
-    currentQuestion = 0;
-    userAnswers = [];
-    showQuestion();
+const certName = document.getElementById("cert-name");
+const certIq = document.getElementById("cert-iq");
+const certDate = document.getElementById("cert-date");
+const pdfBtn = document.getElementById("pdf-btn");
 
-    document.querySelector("#resultSection h2").innerText = `${userName} — ผลการทดสอบ IQ ของคุณ`;
-}
+// Slider values display
+const ageSlider = document.getElementById("age");
+const weightSlider = document.getElementById("weight");
+const heightSlider = document.getElementById("height");
+const ageValue = document.getElementById("age-value");
+const weightValue = document.getElementById("weight-value");
+const heightValue = document.getElementById("height-value");
 
-/* ==========================
-   แสดงคำถาม
-   ========================== */
+ageSlider.oninput = () => ageValue.textContent = ageSlider.value;
+weightSlider.oninput = () => weightValue.textContent = weightSlider.value;
+heightSlider.oninput = () => heightValue.textContent = heightSlider.value;
+
+// ====== FUNCTIONS ======
+
+// Show question
 function showQuestion() {
-    document.getElementById("questionText").innerText = allQuestions[currentQuestion];
-    document.getElementById("questionBox").value = "";
-
-    document.getElementById("progress").innerText = `ข้อที่ ${currentQuestion+1}/${totalQuestions}`;
-    document.getElementById("progressBar").style.width = `${((currentQuestion)/totalQuestions)*100}%`;
+    const q = allQuestions[currentQuestionIndex];
+    questionText.textContent = `คำถาม ${currentQuestionIndex + 1}: ${q.q}`;
+    answerInput.value = answers[currentQuestionIndex] || "";
+    // Update progress
+    const progressPercent = ((currentQuestionIndex) / allQuestions.length) * 100;
+    progressFill.style.width = progressPercent + "%";
 }
 
-/* ==========================
-   ไปข้อต่อไป
-   ========================== */
-function nextQuestion() {
-    const ans = document.getElementById("questionBox").value.trim();
-    if(ans === "") { alert("กรุณาพิมพ์คำตอบก่อน"); return; }
-    userAnswers.push(ans);
-    currentQuestion++;
-
-    if(currentQuestion >= totalQuestions) { finishTest(); }
-    else { showQuestion(); }
+// Save answer
+function saveAnswer() {
+    answers[currentQuestionIndex] = answerInput.value.trim();
 }
 
-/* ==========================
-   จบการทดสอบ
-   ========================== */
-function finishTest() {
-    document.getElementById("quizSection").style.display = "none";
-    document.getElementById("resultSection").style.display = "block";
+// Navigation buttons
+prevBtn.addEventListener("click", () => {
+    saveAnswer();
+    if (currentQuestionIndex > 0) currentQuestionIndex--;
+    showQuestion();
+});
 
-    // สมมุติ IQ คำนวณ
-    let logicCorrect = 0;
-    for(let i=0;i<logicQuestions.length;i++){
-        if(userAnswers[i]!=="") logicCorrect+=1;
+nextBtn.addEventListener("click", () => {
+    saveAnswer();
+    if (currentQuestionIndex < allQuestions.length - 1) {
+        currentQuestionIndex++;
+        showQuestion();
+    } else {
+        finishQuiz();
     }
-    let openScore = (userAnswers.length - logicQuestions.length)*5;
+});
 
-    iqScore = Math.min(270, Math.round((logicCorrect*10 + openScore)*270/(logicQuestions.length*10 + openQuestions.length*5)));
-    document.getElementById("iqScore").innerText = iqScore;
+// ====== PROFILE FORM SUBMIT ======
+profileForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    // Honeypot check
+    if(profileForm.email.value) return alert("Bot detected!");
+    profileSection.classList.remove("active");
+    quizSection.classList.add("active");
+    showQuestion();
+});
 
-    // Radar chart
-    const ctx = document.getElementById('iqChart').getContext('2d');
-    const data = {
-        labels: ['Logic','Math','Verbal','Spatial','Memory','Creativity'],
-        datasets:[{
-            label:'Skill Profile',
-            data:[
-                Math.min(100, logicCorrect*10),
-                Math.min(100, logicCorrect*8),
-                Math.min(100, openScore*2),
-                Math.min(100, logicCorrect*6),
-                Math.min(100, openScore*3),
-                Math.min(100, openScore*4)
-            ],
-            backgroundColor:'rgba(0,224,255,0.2)',
-            borderColor:'#00e0ff',
-            borderWidth:2,
-            pointBackgroundColor:'#00ffaa'
+// ====== CALCULATE IQ ======
+function calculateIQ() {
+    let logicScore = 0;
+    logicQuestions.forEach((q, i) => {
+        if (answers[i].replace(/\s+/g,'') === q.a) logicScore++;
+    });
+    let openScore = openQuestions.length; // สมมุติเต็ม score
+    // IQ สมมุติ 50-270
+    let totalScore = ((logicScore / logicQuestions.length) * 60 + (openScore / openQuestions.length) * 40);
+    let iq = Math.round(50 + totalScore * (220/100));
+    return iq;
+}
+
+// ====== SHOW RESULT ======
+function finishQuiz() {
+    saveAnswer();
+    quizSection.classList.remove("active");
+    resultSection.classList.add("active");
+
+    const userName = document.getElementById("user-name").value;
+    const iq = calculateIQ();
+
+    resultName.textContent = userName;
+    iqScore.textContent = iq;
+
+    // Radar chart data
+    const radarData = {
+        labels: ["Logic", "Math", "Verbal", "Spatial", "Memory", "Creativity"],
+        datasets: [{
+            label: "Skill Radar",
+            data: [logicQuestions.length*10, logicQuestions.length*10, 70, 80, 75, 90],
+            backgroundColor: "rgba(0, 255, 255, 0.2)",
+            borderColor: "cyan",
+            borderWidth: 2,
+            pointBackgroundColor: "cyan"
         }]
     };
-    new Chart(ctx,{type:'radar',data:data,options:{responsive:true,scales:{r:{suggestedMin:0,suggestedMax:100}}}});
+    new Chart(radarCanvas, {
+        type: 'radar',
+        data: radarData,
+        options: {
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
 
-    // Certificate
-    const userName = document.getElementById("name").value.trim();
-    document.getElementById("certName").innerText = userName;
-    document.getElementById("certIQ").innerText = iqScore;
-    document.getElementById("certDate").innerText = new Date().toLocaleDateString();
-    document.getElementById("certificate").style.display="block";
+    // Prepare certificate
+    certName.textContent = userName;
+    certIq.textContent = iq;
+    certDate.textContent = new Date().toLocaleDateString();
 }
 
-/* ==========================
-   สร้าง Certificate PDF
-   ========================== */
-function generateCertificate() {
+// ====== DOWNLOAD CERTIFICATE PDF ======
+pdfBtn.addEventListener("click", () => {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('landscape','pt','a4');
-
-    const name=document.getElementById("certName").innerText;
-    const iq=document.getElementById("certIQ").innerText;
-    const date=document.getElementById("certDate").innerText;
-
-    doc.setFontSize(36); doc.setTextColor(0,224,255);
-    doc.text("Certificate of IQ Test", 300, 100, {align:'center'});
-
-    doc.setFontSize(24); doc.setTextColor(255,255,255);
-    doc.text(`ผู้ทดสอบ: ${name}`, 300, 200, {align:'center'});
-    doc.text(`IQ Score: ${iq}`, 300, 260, {align:'center'});
-    doc.text(`วันที่ทดสอบ: ${date}`, 300, 320, {align:'center'});
-
-    doc.setDrawColor(0,224,255); doc.setLineWidth(3);
-    doc.rect(50,50,700,400,'S');
-
-    doc.save(`${name}_IQ_Certificate.pdf`);
-}
+    const doc = new jsPDF();
+    doc.setFontSize(24);
+    doc.text("Certificate", 105, 30, null, null, "center");
+    doc.setFontSize(16);
+    doc.text(`ชื่อ: ${certName.textContent}`, 20, 50);
+    doc.text(`IQ: ${certIq.textContent}`, 20, 60);
+    doc.text(`วันที่ทดสอบ: ${certDate.textContent}`, 20, 70);
+    doc.save(`${certName.textContent}_IQ_Certificate.pdf`);
+});
