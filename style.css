@@ -1,99 +1,200 @@
-/* ----- ตัวเว็บทั้งหมด ----- */
+/* ==============================
+   Global Styles
+   ============================== */
 body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg,#f0f2f5,#d0e7ff);
-    display:flex;
-    justify-content:center;
-    align-items:flex-start;
-    min-height:100vh;
-    padding:20px;
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  background: radial-gradient(circle at 30% 30%, #0f2027, #203a43, #2c5364);
+  color: #ffffff;
+  overflow-x: hidden;
 }
 
-/* ----- กล่องหลัก ----- */
-.container{
-    background:white;
-    padding:25px 30px;
-    border-radius:15px;
-    width:95%;
-    max-width:650px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+.container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(10px);
+  animation: fadeIn 1.2s ease-in-out;
 }
 
-/* ----- หัวข้อ ----- */
-h1,h2{
-    text-align:center;
-    color:#333;
+/* ==============================
+   Header
+   ============================== */
+h1 {
+  text-align: center;
+  color: #00e0ff;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  text-shadow: 0 0 15px #00e0ff;
 }
 
-/* ----- input, textarea, select ----- */
-input,textarea,select{
-    width:100%;
-    padding:10px;
-    margin:5px 0 15px 0;
-    border-radius:6px;
-    border:1px solid #ccc;
-    font-size:16px;
-    box-sizing:border-box;
+.subtitle {
+  text-align: center;
+  color: #ccc;
+  font-size: 1.2rem;
+  margin-bottom: 30px;
 }
 
-/* ----- ปุ่ม ----- */
-button{
-    padding:12px;
-    width:100%;
-    background-color:#4CAF50;
-    color:white;
-    font-weight:bold;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    font-size:16px;
-    margin-bottom:15px;
-    transition:0.3s;
-}
-button:hover{
-    background-color:#45a049;
+/* ==============================
+   Form Section
+   ============================== */
+label {
+  font-weight: 500;
+  color: #fff;
+  display: block;
+  margin: 15px 0 5px;
 }
 
-/* ----- กล่องคำถาม ----- */
-.question-box{
-    margin-bottom:18px;
+select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transition: 0.3s;
 }
 
-/* ----- progress ----- */
-#progress{
-    margin-bottom:15px;
-    font-weight:bold;
-    text-align:right;
-    color:#555;
-    font-size:14px;
+select:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
-/* ----- canvas radar chart ----- */
-canvas#iqChart{
-    margin-top:20px;
-    background: #f9f9f9;
-    border-radius:15px;
-    padding:10px;
+/* ==============================
+   Question Section
+   ============================== */
+#question-box {
+  margin-top: 30px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 150px;
+  box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.2);
+  font-size: 1.2rem;
 }
 
-/* ----- ผลสรุป ----- */
-#summary{
-    margin-top:15px;
-    font-size:16px;
-    text-align:center;
-    font-weight:bold;
-    color:#333;
+#answer-input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 15px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
 }
 
-/* ----- responsive สำหรับ iPad ----- */
-@media (max-width:768px){
-    .container{
-        padding:20px;
-    }
-    input,textarea,select{
-        font-size:15px;
-    }
-    button{
-        font-size:15px;
-    }
+button {
+  margin-top: 25px;
+  background: linear-gradient(45deg, #00e0ff, #0072ff);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 0 15px rgba(0, 224, 255, 0.4);
+}
+
+button:hover {
+  background: linear-gradient(45deg, #0072ff, #00e0ff);
+  transform: scale(1.05);
+}
+
+/* ==============================
+   Progress Bar
+   ============================== */
+.progress-container {
+  margin-top: 25px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+  height: 20px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00e0ff, #00ffaa);
+  transition: width 0.4s ease;
+}
+
+/* ==============================
+   Radar Chart
+   ============================== */
+#chart-container {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+canvas {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  padding: 10px;
+  box-shadow: 0 0 20px rgba(0, 224, 255, 0.3);
+}
+
+/* ==============================
+   Result Box
+   ============================== */
+#result-box {
+  margin-top: 30px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 12px;
+  font-size: 1.4rem;
+  color: #00ffaa;
+  font-weight: bold;
+  box-shadow: 0 0 20px rgba(0, 255, 170, 0.2);
+}
+
+/* ==============================
+   Anti-Spam Notice
+   ============================== */
+.security-note {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.security-note span {
+  color: #00ffaa;
+}
+
+/* ==============================
+   Animations
+   ============================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==============================
+   Mobile Responsive
+   ============================== */
+@media screen and (max-width: 600px) {
+  .container {
+    padding: 25px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  button {
+    width: 100%;
+  }
+
+  canvas {
+    width: 250px !important;
+    height: 250px !important;
+  }
 }
