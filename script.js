@@ -1,5 +1,4 @@
 // ====== DATA ======
-// Logic questions (คำตอบเป็นตัวเลข)
 const logicQuestions = [
     { q: "135 = 65, 254 = 136, 312 = ?", a: "288" },
     { q: "12, 23, 34, 45, ?", a: "56" },
@@ -13,7 +12,6 @@ const logicQuestions = [
     { q: "4, 9, 19, 39, 79, ?", a: "159" }
 ];
 
-// Open-ended questions
 const openQuestions = [
     { q: "ถ้าคุณพบปัญหาซับซ้อน คุณจะจัดการอย่างไร?", a: "" },
     { q: "เล่าประสบการณ์ที่คุณคิดว่าใช้ความคิดสร้างสรรค์สูงสุด", a: "" },
@@ -22,7 +20,6 @@ const openQuestions = [
     { q: "จงอธิบายวิธีคิดเชิงตรรกะของคุณในการแก้โจทย์", a: "" }
 ];
 
-// Merge all questions
 const allQuestions = [...logicQuestions, ...openQuestions];
 let currentQuestionIndex = 0;
 let answers = Array(allQuestions.length).fill("");
@@ -64,18 +61,14 @@ weightSlider.oninput = () => weightValue.textContent = weightSlider.value;
 heightSlider.oninput = () => heightValue.textContent = heightSlider.value;
 
 // ====== FUNCTIONS ======
-
-// Show question
 function showQuestion() {
     const q = allQuestions[currentQuestionIndex];
     questionText.textContent = `คำถาม ${currentQuestionIndex + 1}: ${q.q}`;
     answerInput.value = answers[currentQuestionIndex] || "";
-    // Update progress
     const progressPercent = ((currentQuestionIndex) / allQuestions.length) * 100;
     progressFill.style.width = progressPercent + "%";
 }
 
-// Save answer
 function saveAnswer() {
     answers[currentQuestionIndex] = answerInput.value.trim();
 }
@@ -100,7 +93,6 @@ nextBtn.addEventListener("click", () => {
 // ====== PROFILE FORM SUBMIT ======
 profileForm.addEventListener("submit", (e) => {
     e.preventDefault();
-    // Honeypot check
     if(profileForm.email.value) return alert("Bot detected!");
     profileSection.classList.remove("active");
     quizSection.classList.add("active");
@@ -114,7 +106,6 @@ function calculateIQ() {
         if (answers[i].replace(/\s+/g,'') === q.a) logicScore++;
     });
     let openScore = openQuestions.length; // สมมุติเต็ม score
-    // IQ สมมุติ 50-270
     let totalScore = ((logicScore / logicQuestions.length) * 60 + (openScore / openQuestions.length) * 40);
     let iq = Math.round(50 + totalScore * (220/100));
     return iq;
@@ -132,7 +123,7 @@ function finishQuiz() {
     resultName.textContent = userName;
     iqScore.textContent = iq;
 
-    // Radar chart data
+    // Radar chart
     const radarData = {
         labels: ["Logic", "Math", "Verbal", "Spatial", "Memory", "Creativity"],
         datasets: [{
@@ -149,15 +140,12 @@ function finishQuiz() {
         data: radarData,
         options: {
             scales: {
-                r: {
-                    beginAtZero: true,
-                    max: 100
-                }
+                r: { beginAtZero: true, max: 100 }
             }
         }
     });
 
-    // Prepare certificate
+    // Certificate
     certName.textContent = userName;
     certIq.textContent = iq;
     certDate.textContent = new Date().toLocaleDateString();
@@ -165,10 +153,10 @@ function finishQuiz() {
 
 // ====== DOWNLOAD CERTIFICATE PDF ======
 pdfBtn.addEventListener("click", () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    if(!certName.textContent) return alert("ไม่มีข้อมูล Certificate!");
+    const doc = new window.jspdf.jsPDF(); // แก้ตรงนี้
     doc.setFontSize(24);
-    doc.text("Certificate", 105, 30, null, null, "center");
+    doc.text("Certificate", 105, 30, { align: "center" });
     doc.setFontSize(16);
     doc.text(`ชื่อ: ${certName.textContent}`, 20, 50);
     doc.text(`IQ: ${certIq.textContent}`, 20, 60);
