@@ -156,15 +156,15 @@ canvas {
 }
 
 /* ==============================
-   Certificate Section
+   Certificate
    ============================== */
 #certificate {
   margin-top: 30px;
-  background: rgba(0, 0, 0, 0.25);
-  padding: 25px;
+  background: rgba(0,0,0,0.3);
+  padding: 20px;
   border-radius: 15px;
   text-align: center;
-  box-shadow: 0 0 25px rgba(0, 224, 255, 0.3);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
 }
 
 #certificate h2 {
@@ -174,8 +174,8 @@ canvas {
 }
 
 #certificate p {
+  font-size: 1.2rem;
   color: #fff;
-  font-size: 1.1rem;
   margin: 8px 0;
 }
 
