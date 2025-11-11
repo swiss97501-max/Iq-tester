@@ -10,12 +10,12 @@
 <body>
 <div class="container">
   <h1>Swiss Russameekiattisak — IQ Tester</h1>
-  <p class="subtitle">วัด IQ สูงสุดด้วยโจทย์ตรรกะและวิเคราะห์สุดซับซ้อน พร้อม Skill Radar Chart</p>
+  <p class="subtitle">วัด IQ สูงสุดด้วยโจทย์ตรรกะและวิเคราะห์สุดซับซ้อน พร้อม Skill Radar Chart และ Certificate</p>
 
   <!-- Section กรอกข้อมูล -->
   <div id="profileSection">
       <label for="name">ชื่อผู้ทดสอบ:</label>
-      <input type="text" id="name" value="Swiss Russameekiattisak" disabled>
+      <input type="text" id="name" placeholder="พิมพ์ชื่อของคุณ">
 
       <label for="age">อายุ:</label>
       <select id="age"></select>
@@ -49,12 +49,19 @@
 
   <!-- Section ผลลัพธ์ -->
   <div id="resultSection" style="display:none">
-      <h2>ผลการทดสอบ IQ ของคุณ</h2>
+      <h2 id="resultTitle">ผลการทดสอบ IQ ของคุณ</h2>
       <div id="result-box">
           IQ ของคุณ: <span id="iqScore"></span>
       </div>
       <div id="chart-container">
           <canvas id="iqChart" width="400" height="400"></canvas>
+      </div>
+      <button onclick="generateCertificate()">ดาวน์โหลด Certificate</button>
+      <div id="certificate" style="display:none;">
+          <h2>Certificate of IQ Test</h2>
+          <p>ผู้ทดสอบ: <span id="certName"></span></p>
+          <p>IQ Score: <span id="certIQ"></span></p>
+          <p>วันที่ทดสอบ: <span id="certDate"></span></p>
       </div>
   </div>
 </div>
