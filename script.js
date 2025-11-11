@@ -15,6 +15,12 @@ let allQuestions = [...logicQuestions, ...openQuestions];
    เริ่มการทดสอบ
    ========================== */
 function startTest() {
+    const userName = document.getElementById("name").value.trim();
+    if(userName === "") {
+        alert("กรุณาใส่ชื่อของคุณก่อนเริ่มทดสอบ");
+        return;
+    }
+
     // ตรวจ honeypot
     if(document.getElementById("hp_field").value !== "") {
         alert("Bot detected! การทดสอบถูกยกเลิก");
@@ -27,6 +33,8 @@ function startTest() {
     currentQuestion = 0;
     userAnswers = [];
     showQuestion();
+
+    document.querySelector("#resultSection h2").innerText = `${userName} — ผลการทดสอบ IQ ของคุณ`;
 }
 
 /* ==========================
@@ -70,7 +78,7 @@ function finishTest() {
     // Logic Questions 1 ข้อ = 10 คะแนน, Open Questions = 5 คะแนน
     let logicCorrect = 0;
     for(let i=0;i<logicQuestions.length;i++) {
-        if(userAnswers[i] !== "") logicCorrect += 1; // placeholder, ในเว็บจริงต้องตรวจคำตอบจริง
+        if(userAnswers[i] !== "") logicCorrect += 1; // placeholder, ตรวจคำตอบจริงในอนาคต
     }
     let openScore = (userAnswers.length - logicQuestions.length) * 5;
 
@@ -110,4 +118,45 @@ function finishTest() {
             }
         }
     });
+
+    // แสดง certificate section
+    const userName = document.getElementById("name").value.trim();
+    document.getElementById("certName").innerText = userName;
+    document.getElementById("certIQ").innerText = iqScore;
+    document.getElementById("certDate").innerText = new Date().toLocaleDateString();
+    document.getElementById("certificate").style.display = "block";
+}
+
+/* ==========================
+   สร้าง Certificate PDF
+   ========================== */
+function generateCertificate() {
+    // ใช้ jsPDF
+    if(typeof jspdf === 'undefined') {
+        alert("โปรดเพิ่ม jsPDF library เพื่อดาวน์โหลด PDF");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('landscape', 'pt', 'a4');
+
+    const name = document.getElementById("certName").innerText;
+    const iq = document.getElementById("certIQ").innerText;
+    const date = document.getElementById("certDate").innerText;
+
+    doc.setFontSize(36);
+    doc.setTextColor(0, 224, 255);
+    doc.text("Certificate of IQ Test", 300, 100, {align:'center'});
+
+    doc.setFontSize(24);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`ผู้ทดสอบ: ${name}`, 300, 200, {align:'center'});
+    doc.text(`IQ Score: ${iq}`, 300, 260, {align:'center'});
+    doc.text(`วันที่ทดสอบ: ${date}`, 300, 320, {align:'center'});
+
+    doc.setDrawColor(0, 224, 255);
+    doc.setLineWidth(3);
+    doc.rect(50, 50, 700, 400, 'S');
+
+    doc.save(`${name}_IQ_Certificate.pdf`);
 }
