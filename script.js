@@ -1,111 +1,196 @@
-// ----- คำถามเปิด 10 ข้อ -----
-const openQuestions = [
-"ถ้าเกิดไฟไหม้ในบ้าน คุณจะทำอย่างไรเพื่อความปลอดภัยของตัวเองและผู้อื่น?",
-"หากคุณพบเพื่อนที่เศร้า คุณจะช่วยให้เขารู้สึกดีขึ้นได้อย่างไร?",
-"ถ้ารถคุณเสียกลางทาง คุณจะจัดการอย่างไรเพื่อให้ถึงที่หมาย?",
-"หากคุณมีโอกาสลงทุน คุณจะตัดสินใจเลือกอะไรและทำไม?",
-"ถ้าเพื่อนลืมวันสำคัญของคุณ คุณจะทำอย่างไร?",
-"ถ้าเกิดปัญหาในทีมงาน คุณจะแก้ไขความขัดแย้งอย่างไร?",
-"คุณจะวางแผนการเรียนหรือทำงานอย่างไรเพื่อให้มีประสิทธิภาพสูงสุด?",
-"ถ้าต้องแก้ปัญหาความขัดแย้งระหว่างเพื่อน คุณจะทำอย่างไร?",
-"หากต้องตัดสินใจเรื่องสำคัญโดยมีเวลาจำกัด คุณจะทำอย่างไร?",
-"ถ้าพบว่าข้อมูลที่ใช้ในการตัดสินใจผิด คุณจะปรับแผนอย่างไร?"
-];
+/* ==========================
+   Swiss IQ Tester v3.0
+   By Swiss Russameekiattisak
+   ========================== */
 
-// ----- คำถามปิด 100 ข้อ -----
-const closedQuestions = [
-"1 2 4 8 ?","2 4 8 16 ?","3 6 12 24 ?","5 10 20 40 ?","1 4 9 16 ?",
-"2 5 10 17 ?","10 20 40 80 ?","1 3 6 10 ?","2 6 12 20 ?","1 3 5 7 ?",
-"23=5 45=9 78=?","123=77 243=157 435=?","12 24 36 ?","7 14 28 56 ?","9 18 36 72 ?",
-"4 8 16 32 ?","5 15 45 135 ?","6 12 18 24 ?","8 16 32 64 ?","11 22 44 88 ?",
-"2 5 11 23 ?","1 2 6 24 ?","3 9 27 81 ?","2 6 12 20 ?","5 7 10 14 ?",
-"1 1 2 3 5 ?","0 1 1 2 3 ?","2 4 8 16 ?","3 6 12 24 ?","1 2 4 8 ?",
-"13 26 52 104 ?","14 28 56 112 ?","15 30 60 120 ?","16 32 64 128 ?","17 34 68 136 ?",
-"18 36 72 144 ?","19 38 76 152 ?","20 40 80 160 ?","21 42 84 168 ?","22 44 88 176 ?"
-];
-
-// ----- สุ่ม 10 คำถามปิด -----
-function getRandomClosedQuestions(n){
-    let shuffled = closedQuestions.sort(()=>0.5-Math.random());
-    return shuffled.slice(0,n);
-}
-
-// ----- ตัวแปร global -----
-const totalQuestions = openQuestions.length + 10;
+// ----------- ค่าพื้นฐาน -----------
+let currentQuestion = 0;
 let answers = [];
-let allQuestions = [];
+let totalQuestions = 10;
+let profile = {};
+let startTime = 0;
 
-// ----- เริ่มทดสอบ -----
-function startTest(){
-    document.getElementById("profile").style.display="none";
-    document.getElementById("test").style.display="block";
-    const form = document.getElementById("questionForm");
-    form.innerHTML="";
-    const randomClosed = getRandomClosedQuestions(10);
-    allQuestions = [...openQuestions, ...randomClosed];
-    allQuestions.forEach((q,i)=>{
-        const div = document.createElement("div");
-        div.className="question-box";
-        div.innerHTML = `<label>Q${i+1}: ${q}</label>
-        <textarea id="answer${i}" rows="2" oninput="updateProgress()"></textarea>`;
-        form.appendChild(div);
-    });
-    updateProgress();
+// ----------- ป้องกันสแปม/บอท -----------
+function checkRateLimit(max = 5, sec = 60) {
+  const key = 'iq_times';
+  const now = Date.now();
+  let arr = JSON.parse(localStorage.getItem(key) || '[]');
+  arr = arr.filter(t => now - t < sec * 1000);
+  if (arr.length >= max) return false;
+  arr.push(now);
+  localStorage.setItem(key, JSON.stringify(arr));
+  return true;
 }
 
-// ----- อัปเดต progress -----
-function updateProgress(){
-    let answered = 0;
-    for(let i=0;i<totalQuestions;i++){
-        if(document.getElementById(`answer${i}`).value.trim()!="") answered++;
-    }
-    document.getElementById("progress").innerText=`ตอบไป ${answered}/${totalQuestions} ข้อ`;
+// honeypot ตรวจบอท
+function checkBot() {
+  const hp = document.getElementById('hp_field');
+  return hp && hp.value.trim() !== "";
 }
 
-// ----- ส่งคำตอบและประเมิน -----
-function submitTest(){
-    answers = [];
-    for(let i=0;i<totalQuestions;i++){
-        answers.push(document.getElementById(`answer${i}`).value.trim());
-    }
+// ----------- ระบบเริ่มต้น -----------
+const logicQuestions = [
+  "12, 24, 48, 96, ?",
+  "2, 6, 18, 54, ?",
+  "23 = 5, 45 = 9, 78 = ?",
+  "ถ้ารถคันหนึ่งวิ่งด้วย 60 กม./ชม. ไป 2 ชม. แล้วอีกคันวิ่ง 80 กม./ชม. ไป 1.5 ชม. ใครไกลกว่า?",
+  "123 = 77, 243 = 157, 435 = ?"
+];
 
-    // ----- ประเมิน skill แบบตัวอย่าง -----
-    let skill = {
-        Logic: Math.floor(Math.random()*100),
-        Math: Math.floor(Math.random()*100),
-        Verbal: Math.floor(Math.random()*100),
-        Spatial: Math.floor(Math.random()*100),
-        Memory: Math.floor(Math.random()*100),
-        Creativity: Math.floor(Math.random()*100)
-    };
+const openQuestions = [
+  "ถ้าคุณถูกบังคับให้แก้ปัญหาที่ไม่มีทางแก้ คุณจะเริ่มจากตรงไหน?",
+  "หากคุณถูกทิ้งไว้บนเกาะร้าง มีเวลา 24 ชั่วโมง คุณจะทำอย่างไรให้รอดชีวิต?",
+  "คุณจะจัดการกับเพื่อนร่วมทีมที่ไม่ทำงานแต่ได้เครดิตเท่าคุณอย่างไร?",
+  "ถ้า AI ควบคุมโลก คุณจะหาวิธีสื่อสารหรือโต้แย้งมันอย่างไร?",
+  "จงออกแบบวิธีเรียนรู้สิ่งใหม่โดยไม่มีหนังสือหรืออินเทอร์เน็ต"
+];
 
-    // ----- คำนวณ IQ ประมาณ -----
-    let iq = 50 + Math.round((skill.Logic + skill.Math + skill.Verbal + skill.Spatial + skill.Memory + skill.Creativity)/6*2);
+// ----------- โหลดคำถาม -----------
+function loadQuestion() {
+  const qBox = document.getElementById("questionBox");
+  const qText = document.getElementById("questionText");
+  const progress = document.getElementById("progress");
+  const btnNext = document.getElementById("btnNext");
 
-    // แสดงผล
-    document.getElementById("test").style.display="none";
-    document.getElementById("result").style.display="block";
+  let q;
+  if (currentQuestion < logicQuestions.length) {
+    q = logicQuestions[currentQuestion];
+  } else {
+    q = openQuestions[currentQuestion - logicQuestions.length];
+  }
 
-    // ----- สร้าง radar chart -----
-    const ctx = document.getElementById('iqChart').getContext('2d');
-    new Chart(ctx,{
-        type:'radar',
-        data:{
-            labels:["Logic","Math","Verbal","Spatial","Memory","Creativity"],
-            datasets:[{
-                label:`IQ ประมาณ: ${iq}`,
-                data:[skill.Logic,skill.Math,skill.Verbal,skill.Spatial,skill.Memory,skill.Creativity],
-                backgroundColor:'rgba(54,162,235,0.2)',
-                borderColor:'rgba(54,162,235,1)',
-                borderWidth:2,
-                pointBackgroundColor:'rgba(54,162,235,1)'
-            }]
-        },
-        options:{
-            scales:{r:{min:0,max:100,ticks:{stepSize:20}}},
-            plugins:{legend:{position:'top'}}
+  qText.innerText = `ข้อ ${currentQuestion + 1}: ${q}`;
+  progress.innerText = `ข้อที่ ${currentQuestion + 1}/${totalQuestions}`;
+  qBox.value = "";
+  btnNext.innerText = currentQuestion === totalQuestions - 1 ? "ส่งผลการทดสอบ" : "ข้อต่อไป";
+}
+
+// ----------- กดถัดไป / ส่ง -----------
+function nextQuestion() {
+  if (checkBot()) {
+    alert("การกระทำถูกบล็อก (สงสัยว่าเป็นบอท)");
+    return;
+  }
+  if (!checkRateLimit()) {
+    alert("คุณตอบเร็วเกินไป กรุณารอสักครู่");
+    return;
+  }
+
+  const ans = document.getElementById("questionBox").value.trim();
+  if (!ans) {
+    alert("กรุณาตอบก่อนไปต่อ");
+    return;
+  }
+
+  answers.push(ans);
+  currentQuestion++;
+
+  if (currentQuestion < totalQuestions) {
+    loadQuestion();
+  } else {
+    endTest();
+  }
+}
+
+// ----------- ประเมินผล IQ -----------
+function endTest() {
+  const elapsed = (Date.now() - startTime) / 1000;
+  const avgLen = answers.reduce((a,b)=>a+b.length,0)/answers.length;
+
+  // วิเคราะห์ง่ายๆ: ยาว, มีตรรกะ, ไม่ซ้ำ, เวลานาน -> IQ สูง
+  let iq = 80 + (avgLen / 5) + Math.min(elapsed/8,100);
+  if (iq > 270) iq = 270;
+
+  const detail = {
+    Logic: (Math.random()*50 + iq/5),
+    Math: (Math.random()*40 + iq/6),
+    Verbal: (avgLen/3 + 40),
+    Spatial: (Math.random()*30 + iq/8),
+    Memory: (Math.random()*40 + 30),
+    Creativity: (Math.random()*50 + iq/7)
+  };
+
+  renderRadar(detail, iq);
+}
+
+// ----------- Radar Chart -----------
+function renderRadar(detail, iq) {
+  document.getElementById("quizSection").style.display = "none";
+  document.getElementById("resultSection").style.display = "block";
+  document.getElementById("iqScore").innerText = Math.round(iq);
+
+  const ctx = document.getElementById("iqChart").getContext("2d");
+  new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ["Logic","Math","Verbal","Spatial","Memory","Creativity"],
+      datasets: [{
+        label: "Skill Profile",
+        data: [
+          detail.Logic, detail.Math, detail.Verbal,
+          detail.Spatial, detail.Memory, detail.Creativity
+        ],
+        fill: true,
+        backgroundColor: "rgba(54,162,235,0.3)",
+        borderColor: "rgb(54,162,235)",
+        pointBackgroundColor: "rgb(54,162,235)"
+      }]
+    },
+    options: {
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 20 }
         }
-    });
+      }
+    }
+  });
+}
 
-    document.getElementById("summary").innerHTML=`<p>ตอบคำถามทั้งหมด ${totalQuestions} ข้อแล้ว</p>`;
+// ----------- เริ่มทดสอบ -----------
+function startTest() {
+  const name = document.getElementById("name").value.trim();
+  const age = parseInt(document.getElementById("age").value);
+  const weight = parseFloat(document.getElementById("weight").value);
+  const height = parseFloat(document.getElementById("height").value);
+
+  if (!name || !age || !weight || !height) {
+    alert("กรุณากรอกข้อมูลให้ครบ");
+    return;
+  }
+
+  profile = { name, age, weight, height };
+  startTime = Date.now();
+  document.getElementById("profileSection").style.display = "none";
+  document.getElementById("quizSection").style.display = "block";
+  loadQuestion();
+}
+
+// ----------- เมื่อโหลดหน้าเว็บ -----------
+window.onload = () => {
+  loadSelectors();
+};
+
+// ----------- สร้างตัวเลือกอายุ/ส่วนสูง/น้ำหนัก -----------
+function loadSelectors() {
+  const ageSel = document.getElementById("age");
+  const hSel = document.getElementById("height");
+  const wSel = document.getElementById("weight");
+
+  for (let i=1;i<=140;i++){
+    const opt = document.createElement("option");
+    opt.value = i; opt.text = i;
+    ageSel.appendChild(opt);
+  }
+  for (let i=30;i<=250;i++){
+    const opt = document.createElement("option");
+    opt.value = i; opt.text = i;
+    hSel.appendChild(opt);
+  }
+  for (let i=3;i<=250;i++){
+    const opt = document.createElement("option");
+    opt.value = i; opt.text = i;
+    wSel.appendChild(opt);
+  }
 }
