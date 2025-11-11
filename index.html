@@ -1,30 +1,48 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI IQ Tester</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swiss AI IQ Tester</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>AI IQ Tester</h1>
-        <div id="profile">
-            <h2>กรอกข้อมูลผู้ใช้</h2>
-            <input type="text" id="name" placeholder="ชื่อ">
-            <input type="number" id="age" placeholder="อายุ">
-            <input type="text" id="gender" placeholder="เพศ">
-            <input type="number" id="height" placeholder="ส่วนสูง (cm)">
-            <input type="number" id="weight" placeholder="น้ำหนัก (kg)">
-            <button onclick="startTest()">เริ่มทดสอบ IQ</button>
-        </div>
-        <div id="test" style="display:none;">
-            <div id="question"></div>
-            <input type="text" id="answer" placeholder="ตอบที่นี่">
-            <button onclick="submitAnswer()">ส่งคำตอบ</button>
-        </div>
-        <div id="result" style="display:none;"></div>
+<div class="container">
+    <h1>Swiss AI IQ Tester</h1>
+    
+    <div id="profile">
+        <h2>กรอกข้อมูลผู้ใช้</h2>
+        <label>อายุ: <span id="ageVal">25</span></label>
+        <input type="range" id="age" min="1" max="140" value="25">
+        
+        <label>ส่วนสูง (cm): <span id="heightVal">170</span></label>
+        <input type="range" id="height" min="30" max="250" value="170">
+        
+        <label>น้ำหนัก (kg): <span id="weightVal">70</span></label>
+        <input type="range" id="weight" min="3" max="250" value="70">
+        
+        <label>เพศ:</label>
+        <select id="gender">
+            <option value="ชาย">ชาย</option>
+            <option value="หญิง">หญิง</option>
+            <option value="อื่น">อื่น</option>
+        </select>
+        
+        <button onclick="startTest()">เริ่มทดสอบ IQ</button>
     </div>
-    <script src="script.js"></script>
+    
+    <div id="test" style="display:none;">
+        <h2 id="question"></h2>
+        <input type="text" id="answer" placeholder="ตอบที่นี่">
+        <button onclick="submitAnswer()">ส่งคำตอบ</button>
+    </div>
+    
+    <div id="result" style="display:none;">
+        <h2>ผลการทดสอบ IQ</h2>
+        <canvas id="iqChart" width="400" height="400"></canvas>
+    </div>
+</div>
+<script src="script.js"></script>
 </body>
 </html>
