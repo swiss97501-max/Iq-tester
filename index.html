@@ -6,13 +6,13 @@
 <title>Swiss Russameekiattisak — IQ Tester</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="container">
   <h1>Swiss Russameekiattisak — IQ Tester</h1>
   <p class="subtitle">วัด IQ สูงสุดด้วยโจทย์ตรรกะและวิเคราะห์สุดซับซ้อน พร้อม Skill Radar Chart และ Certificate</p>
 
-  <!-- Section กรอกข้อมูล -->
   <div id="profileSection">
       <label for="name">ชื่อผู้ทดสอบ:</label>
       <input type="text" id="name" placeholder="พิมพ์ชื่อของคุณ">
@@ -26,14 +26,12 @@
       <label for="height">ส่วนสูง (ซม.):</label>
       <select id="height"></select>
 
-      <!-- honeypot field สำหรับป้องกันบอท -->
       <input type="text" id="hp_field" style="display:none" autocomplete="off">
 
       <button onclick="startTest()">เริ่มทดสอบ IQ</button>
       <p class="security-note">ระบบป้องกันสแปมและบอท <span>Active</span></p>
   </div>
 
-  <!-- Section คำถาม -->
   <div id="quizSection" style="display:none">
       <p id="progress">ข้อที่ 1/15</p>
       <div id="question-box">
@@ -47,7 +45,6 @@
       </div>
   </div>
 
-  <!-- Section ผลลัพธ์ -->
   <div id="resultSection" style="display:none">
       <h2 id="resultTitle">ผลการทดสอบ IQ ของคุณ</h2>
       <div id="result-box">
@@ -67,47 +64,5 @@
 </div>
 
 <script src="script.js"></script>
-<script>
-/* =======================
-   คำถามปิดยากสุด (ไม่มี hint)
-   ======================= */
-const logicQuestions = [
-  "2, 3, 5, 9, 17, 33, ?",
-  "12 → 21, 23 → 38, 34 → 57, 45 → ?",
-  "1, 2, 6, 21, 88, ?",
-  "[1 2; 3 4] → 10, [2 3; 4 5] → 14, [3 4; 5 6] → ?",
-  "15 → 7, 28 → 13, 45 → 19, 66 → ?",
-  "1, 2, 4, 12, 48, 240, ?",
-  "1, 1, 2, 6, 24, 120, 720, 5040, ?",
-  "7, 14, 28, 56, 112, ?",
-  "5, 10, 20, 40, 80, ?",
-  "11, 23, 47, 95, 191, ?"
-];
-
-/* =======================
-   คำถามเปิดวิเคราะห์
-   ======================= */
-const openQuestions = [
-  "ถ้าคุณถูกบังคับให้แก้ปัญหาที่ไม่มีทางแก้ คุณจะเริ่มจากตรงไหน?",
-  "หากคุณถูกทิ้งไว้บนเกาะร้าง มีเวลา 24 ชั่วโมง คุณจะทำอย่างไรให้รอดชีวิต?",
-  "คุณจะจัดการกับเพื่อนร่วมทีมที่ไม่ทำงานแต่ได้เครดิตเท่าคุณอย่างไร?",
-  "ถ้า AI ควบคุมโลก คุณจะหาวิธีสื่อสารหรือโต้แย้งมันอย่างไร?",
-  "จงออกแบบวิธีเรียนรู้สิ่งใหม่โดยไม่มีหนังสือหรืออินเทอร์เน็ต"
-];
-
-let totalQuestions = logicQuestions.length + openQuestions.length;
-
-/* =======================
-   สร้าง dropdown เลือกข้อมูล
-   ======================= */
-window.onload = () => {
-  const ageSel = document.getElementById("age");
-  const hSel = document.getElementById("height");
-  const wSel = document.getElementById("weight");
-  for(let i=1;i<=140;i++){ ageSel.appendChild(new Option(i,i)); }
-  for(let i=30;i<=250;i++){ hSel.appendChild(new Option(i,i)); }
-  for(let i=3;i<=250;i++){ wSel.appendChild(new Option(i,i)); }
-};
-</script>
 </body>
 </html>
