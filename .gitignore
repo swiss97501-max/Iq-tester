@@ -1,0 +1,11 @@
+# Ignore env files (do NOT commit real secrets)
+.env
+.env.local
+.env.*.local
+
+# Node / build artifacts
+node_modules/
+dist/
+.build/
+.vscode/
+.DS_Store
