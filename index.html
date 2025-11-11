@@ -1,177 +1,744 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Swiss IQ Tester</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Swiss AI-free IQ Tester — Swiss Russameekiattisak</title>
+
+<!-- Content Security Policy: ลดความเสี่ยง XSS/รวมสคริปต์จากที่ไม่พึงประสงค์ -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  img-src 'self' data:;
+  connect-src 'self';
+  frame-ancestors 'none';
+  base-uri 'self';
+">
+
+<!-- Chart.js + DOMPurify -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js"></script>
+
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg,#f0f2f5,#d0e7ff);
-    display:flex;
-    justify-content:center;
-    align-items:flex-start;
-    min-height:100vh;
-    padding:20px;
+:root{
+  --card-bg: #fff;
+  --accent: #2b8cff;
+  --accent2: #4CAF50;
+}
+*{box-sizing:border-box}
+body{
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg,#e9f0ff,#f7fbf9);
+  margin:0;
+  padding:20px;
+  display:flex;
+  justify-content:center;
 }
 .container{
-    background:white;
-    padding:20px 30px;
-    border-radius:15px;
-    width:95%;
-    max-width:650px;
-    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+  width:100%;
+  max-width:820px;
+  background:var(--card-bg);
+  border-radius:14px;
+  padding:22px;
+  box-shadow:0 12px 30px rgba(20,30,60,0.12);
 }
-h1,h2{text-align:center;color:#333;}
-input,textarea,select{width:100%;padding:8px;margin:5px 0 15px 0;border-radius:6px;border:1px solid #ccc;}
-button{padding:12px;width:100%;background-color:#4CAF50;color:white;font-weight:bold;border:none;border-radius:10px;cursor:pointer;font-size:16px;margin-bottom:15px;}
-button:hover{background-color:#45a049;}
-.question-box{margin-bottom:15px;}
-#progress{margin-bottom:15px;font-weight:bold;}
+header{display:flex;align-items:center;gap:14px}
+.logo{
+  width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#7ad3ff);
+  display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:14px;
+  box-shadow:0 6px 18px rgba(43,140,255,0.18);
+}
+h1{margin:0;font-size:20px}
+.subtitle{color:#556; font-size:13px;margin-top:6px}
+
+.flex-row{display:flex;gap:18px;align-items:flex-start}
+.col{flex:1}
+
+/* profile */
+.profile-card{
+  background:#fbfdff;padding:14px;border-radius:10px;border:1px solid rgba(10,20,60,0.04);
+}
+.label{font-weight:600;color:#222;margin-bottom:6px;display:block}
+.slider-row{display:flex;gap:12px;align-items:center}
+.slider-row input[type=range]{flex:1}
+.value-badge{min-width:56px;text-align:center;background:#f1f6ff;border-radius:8px;padding:6px 8px;border:1px solid rgba(43,140,255,0.12);font-weight:700}
+
+/* form */
+.question-box{margin-bottom:14px;padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(10,20,60,0.03)}
+.question-box label{display:block;font-weight:700;margin-bottom:8px}
+textarea{width:100%;min-height:68px;padding:10px;border-radius:8px;border:1px solid #d8e6ff;resize:vertical;font-size:15px}
+input[type="text"]{width:100%;padding:8px;border-radius:8px;border:1px solid #ddd}
+
+/* buttons */
+.btn{
+  display:inline-block;padding:12px 16px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#6ecbff);color:#fff;font-weight:700;border:none;cursor:pointer;
+  box-shadow:0 8px 20px rgba(43,140,255,0.12);
+}
+.btn-secondary{background:linear-gradient(90deg,var(--accent2),#6fe08b)}
+.progress{margin:12px 0;text-align:right;color:#334; font-weight:700}
+
+/* result area */
+.result-card{margin-top:14px;padding:14px;border-radius:10px;background:linear-gradient(180deg,#ffffff,#fbfeff);border:1px solid rgba(10,20,60,0.04)}
+#iqChart{max-width:480px;margin:8px auto;display:block}
+
+/* small text */
+.small{font-size:13px;color:#555}
+.warning{color:#b03;font-weight:700}
+
+/* hide honeypot visually */
+.hp{position:absolute;left:-9999px;opacity:0;height:1px;width:1px;overflow:hidden}
+@media (max-width:700px){
+  .flex-row{flex-direction:column}
+  header{gap:10px}
+}
 </style>
 </head>
 <body>
-<div class="container">
-<h1>Swiss Russameekiattisak IQ Tester</h1>
+<div class="container" role="main" aria-labelledby="title">
+  <header>
+    <div class="logo">SWISS</div>
+    <div>
+      <h1 id="title">Swiss Russameekiattisak — IQ Tester (AI-free)</h1>
+      <div class="subtitle">คำถามเชิงวิเคราะห์และ pattern — ประเมินละเอียดเป็น 6 สกิล → แปลงเป็น IQ 50–270</div>
+    </div>
+  </header>
 
-<div id="profile">
-<h2>กรอกข้อมูลผู้ใช้</h2>
-<label>ชื่อ: Swiss Russameekiattisak</label>
-<label>อายุ:
-<input type="number" id="age" min="1" max="140" value="25">
-</label>
-<label>ส่วนสูง (cm):
-<input type="number" id="height" min="30" max="250" value="170">
-</label>
-<label>น้ำหนัก (kg):
-<input type="number" id="weight" min="3" max="250" value="70">
-</label>
-<label>เพศ:
-<select id="gender">
-<option value="ชาย">ชาย</option>
-<option value="หญิง">หญิง</option>
-<option value="อื่น">อื่น</option>
-</select>
-</label>
-<button onclick="startTest()">เริ่มทดสอบ IQ</button>
-</div>
+  <section class="flex-row" style="margin-top:18px">
+    <!-- LEFT: profile + controls -->
+    <div class="col">
+      <div class="profile-card" aria-label="Profile">
+        <div class="label">ข้อมูลผู้ทดสอบ (เลื่อนเลือก)</div>
 
-<div id="test" style="display:none;">
-<h2>คำถาม IQ</h2>
-<div id="progress">ตอบไป 0/20 ข้อ</div>
-<form id="questionForm"></form>
-<button onclick="submitTest()">ส่งคำตอบ</button>
-</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+          <div style="flex:1">
+            <div class="small">อายุ</div>
+            <div class="slider-row">
+              <input id="age" type="range" min="1" max="140" value="25" />
+              <div class="value-badge" id="ageVal">25</div>
+            </div>
+          </div>
+        </div>
 
-<div id="result" style="display:none;">
-<h2>ผลการทดสอบ IQ</h2>
-<canvas id="iqChart" width="400" height="400"></canvas>
-<div id="summary"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+          <div style="flex:1">
+            <div class="small">ส่วนสูง (cm)</div>
+            <div class="slider-row">
+              <input id="height" type="range" min="30" max="250" value="170" />
+              <div class="value-badge" id="heightVal">170</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+          <div style="flex:1">
+            <div class="small">น้ำหนัก (kg)</div>
+            <div class="slider-row">
+              <input id="weight" type="range" min="3" max="250" value="70" />
+              <div class="value-badge" id="weightVal">70</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:8px">
+          <div class="small">เพศ</div>
+          <select id="gender" style="padding:8px;border-radius:8px;margin-top:6px">
+            <option>ชาย</option><option>หญิง</option><option>อื่น</option>
+          </select>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn" id="startBtn">เริ่มทดสอบ</button>
+          <button class="btn btn-secondary" id="resetBtn">รีเซ็ต</button>
+        </div>
+
+        <div style="margin-top:10px" class="small">หมายเหตุ: ต้องตอบให้ครบทุกข้อก่อนกดส่ง &amp; ยืนยัน captcha ก่อนส่ง</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: preview / progress -->
+    <div style="width:320px">
+      <div style="padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(10,20,60,0.03)">
+        <div class="small"><strong>ความคืบหน้า:</strong></div>
+        <div id="progress" class="progress">ตอบไป 0/20 ข้อ (0%)</div>
+        <div class="small"><strong>ป้องกันสแปม:</strong></div>
+        <ul class="small" style="margin:8px 0 0 16px">
+          <li>honeypot (ซ่อน)</li>
+          <li>captcha แบบเลข</li>
+          <li>rate-limit ในเบราว์เซอร์</li>
+          <li>sanitize คำตอบก่อนประเมิน (DOMPurify)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUESTIONS -->
+  <section id="testSection" style="margin-top:18px;display:none">
+    <form id="testForm" autocomplete="off" novalidate>
+      <!-- honeypot -->
+      <input id="hp_field" name="hp_field" class="hp" type="text" autocomplete="off">
+
+      <!-- open questions -->
+      <div id="openQs"></div>
+
+      <hr style="margin:18px 0">
+
+      <!-- closed (pattern) -->
+      <div id="closedQs"></div>
+
+      <!-- captcha -->
+      <div style="margin-top:12px; display:flex;gap:10px;align-items:center">
+        <div class="small">ยืนยันว่าคุณไม่ใช่บอท:</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div id="captchaQ" style="font-weight:800;background:#f1f7ff;padding:8px;border-radius:8px;border:1px solid rgba(43,140,255,0.12)"></div>
+          <input id="captchaA" type="text" maxlength="4" style="padding:8px;border-radius:8px;border:1px solid #ddd;width:80px">
+        </div>
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button type="button" class="btn" id="submitBtn">ส่งและประเมิน IQ</button>
+        <button type="button" class="btn btn-secondary" id="previewBtn">ดูตัวอย่างคะแนน (ไม่ส่ง)</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- RESULT -->
+  <section id="resultSection" style="display:none;margin-top:16px">
+    <div class="result-card">
+      <div style="text-align:center">
+        <h2 style="margin:6px 0">ผลการทดสอบ — Swiss Russameekiattisak</h2>
+        <div id="iqText" style="font-size:20px;font-weight:800;color:#2b8cff">IQ: —</div>
+        <div id="detailText" class="small" style="margin-top:6px">รายละเอียดสกิลและคำอธิบายเชิงลึก</div>
+      </div>
+
+      <canvas id="iqChart" aria-label="Radar chart of skills" role="img"></canvas>
+
+      <div id="breakdown" style="margin-top:12px"></div>
+      <div style="margin-top:10px" class="small">หมายเหตุ: คะแนนนี้มาจากระบบประเมินอัตโนมัติ (heuristic) — เพื่อความแม่นยำสูงสุดควรตรวจสอบด้วยผู้เชี่ยวชาญเมื่อจำเป็น</div>
+    </div>
+  </section>
 </div>
 
 <script>
-// ----- คำถามเปิด 10 ข้อ -----
+/* -------------------------
+   Data: questions & answer keys
+   ------------------------- */
 const openQuestions = [
-"ถ้าเกิดไฟไหม้ในบ้าน คุณจะทำอย่างไรเพื่อความปลอดภัยของตัวเองและผู้อื่น?",
-"หากคุณพบเพื่อนที่เศร้า คุณจะช่วยให้เขารู้สึกดีขึ้นได้อย่างไร?",
-"ถ้ารถคุณเสียกลางทาง คุณจะจัดการอย่างไรเพื่อให้ถึงที่หมาย?",
-"หากคุณมีโอกาสลงทุน คุณจะตัดสินใจเลือกอะไรและทำไม?",
-"ถ้าเพื่อนลืมวันสำคัญของคุณ คุณจะทำอย่างไร?",
-"ถ้าเกิดปัญหาในทีมงาน คุณจะแก้ไขความขัดแย้งอย่างไร?",
-"คุณจะวางแผนการเรียนหรือทำงานอย่างไรเพื่อให้มีประสิทธิภาพสูงสุด?",
-"ถ้าต้องแก้ปัญหาความขัดแย้งระหว่างเพื่อน คุณจะทำอย่างไร?",
-"หากต้องตัดสินใจเรื่องสำคัญโดยมีเวลาจำกัด คุณจะทำอย่างไร?",
-"ถ้าพบว่าข้อมูลที่ใช้ในการตัดสินใจผิด คุณจะปรับแผนอย่างไร?"
+`Q1. สมมติว่ารถพาคุณและคนอื่นไปติดอยู่บนถนนที่ราบสูงตอนกลางคืน และมีพายุใกล้เข้ามา: อธิบายขั้นตอนการตัดสินใจแบบละเอียดยิบ (อย่างน้อย 6 ขั้น — ระบุการจัดลำดับความสำคัญ การลดความเสี่ยง และแผนสำรอง)`,
+`Q2. ถ้าคุณต้องออกแบบระบบสำรองข้อมูลสำหรับองค์กรที่มีข้อมูลสำคัญ: อธิบายสถาปัตยกรรม การสำรองข้อมูล การเข้ารหัส และการทดสอบความสามารถในการกู้คืน (recovery) ให้ละเอียด`,
+`Q3. ให้โจทย์เชิงจริยธรรม: ถ้าข้อมูลสำคัญของบริษัทหลุดและคุณพบว่าผู้กระทำเป็นลูกน้องที่ใกล้ชิด คุณจะจัดการอย่างไร ทั้งในมุมกฎหมาย จริยธรรม และการรักษาทีมงาน`,
+`Q4. สมมติต้องวางแผนอีเวนต์สำหรับ 500 คนในเวลา 48 ชั่วโมง: บอกแผนงาน รายการสิ่งที่ต้องทำ ความเสี่ยงสำคัญ และวิธีรับมือกับเหตุฉุกเฉิน`,
+`Q5. อธิบายวิธีแก้ปัญหาความขัดแย้งในทีมงานที่เกิดจากข้อมูลไม่ตรงกัน — อธิบายการตรวจสอบหลักฐาน ขั้นตอนไต่สวน และการคืนความเชื่อมั่นต่อทีม`,
+`Q6. ให้โจทย์เชิงนวัตกรรม: ออกแบบไอเดียแอพ (concept) ที่แก้ปัญหาการศึกษาในชนบท อธิบายฟีเจอร์ หลักการทำงาน และเหตุผลที่ทำให้สำเร็จ`,
+`Q7. ถ้าคุณต้องสร้างกลยุทธ์ปลอมตัว (contingency) สำหรับธุรกิจเมื่อคู่แข่งเปิดตัวอย่างแรง: อธิบาย 5 แนวทางพร้อมการวัดผลและ KPI`,
+`Q8. สมมติว่าข้อมูลทดลองทางวิทย์ของคุณพบผลที่แปลก: อธิบายวิธีตรวจสอบความถูกต้อง การทำซ้ำ การวิเคราะห์สถิติ และการสื่อสารผลลัพธ์ต่อสาธารณะ`,
+`Q9. ให้โจทย์แก้ปริศนาเชิงตรรกะ: อธิบายการคิดขั้นตอน การหา pattern และข้อสรุป พร้อมเหตุผลประกอบ (ตัวอย่าง: ต้องออกแบบขั้นตอนเพื่อแยกสิ่งของ 3 ประเภทจากชุดปนกัน)`,
+`Q10. หากมีเวลาจำกัด 10 นาทีต้องตัดสินใจเรื่องสำคัญที่มีผลกระทบกว้าง: อธิบายกรอบการตัดสินใจ (what/why/options/risks/decision) และวิธีติดตามผล`
 ];
 
-// ----- คำถามปิด 100 ข้อ -----
 const closedQuestions = [
-"1 2 4 8 ?","2 4 8 16 ?","3 6 12 24 ?","5 10 20 40 ?","1 4 9 16 ?",
-"2 5 10 17 ?","10 20 40 80 ?","1 3 6 10 ?","2 6 12 20 ?","1 3 5 7 ?",
-"23=5 45=9 78=?","123=77 243=157 435=?","12 24 36 ?","7 14 28 56 ?","9 18 36 72 ?",
-"4 8 16 32 ?","5 15 45 135 ?","6 12 18 24 ?","8 16 32 64 ?","11 22 44 88 ?",
-"2 5 11 23 ?","1 2 6 24 ?","3 9 27 81 ?","2 6 12 20 ?","5 7 10 14 ?",
-"1 1 2 3 5 ?","0 1 1 2 3 ?","2 4 8 16 ?","3 6 12 24 ?","1 2 4 8 ?",
-"13 26 52 104 ?","14 28 56 112 ?","15 30 60 120 ?","16 32 64 128 ?","17 34 68 136 ?",
-"18 36 72 144 ?","19 38 76 152 ?","20 40 80 160 ?","21 42 84 168 ?","22 44 88 176 ?"
+{q:"1 2 4 8 ?", ans:"16"},
+{q:"2 4 8 16 ?", ans:"32"},
+{q:"3 6 12 24 ?", ans:"48"},
+{q:"5 10 20 40 ?", ans:"80"},
+{q:"1 4 9 16 ?", ans:"25"},
+{q:"2 5 10 17 ?", ans:"26"},
+{q:"10 20 40 80 ?", ans:"160"},
+{q:"1 3 6 10 ?", ans:"15"},
+{q:"2 6 12 20 ?", ans:"30"},
+{q:"1 3 5 7 ?", ans:"9"}
 ];
 
-// ----- สุ่ม 10 คำถามปิด -----
-function getRandomClosedQuestions(n){
-let shuffled = closedQuestions.sort(()=>0.5-Math.random());
-return shuffled.slice(0,n);
+/* -------------------------
+   Utility & security functions
+   ------------------------- */
+// sanitize
+function clean(s){
+  return DOMPurify.sanitize(String(s||""), {ALLOWED_TAGS:[], ALLOWED_ATTR:[]}).trim();
 }
-
-const totalQuestions = openQuestions.length + 10;
-let answers = [];
-
-function startTest(){
-document.getElementById("profile").style.display="none";
-document.getElementById("test").style.display="block";
-const form = document.getElementById("questionForm");
-form.innerHTML="";
-const randomClosed = getRandomClosedQuestions(10);
-window.allQuestions = [...openQuestions, ...randomClosed];
-allQuestions.forEach((q,i)=>{
-const div = document.createElement("div");
-div.className="question-box";
-div.innerHTML=`<label>Q${i+1}: ${q}</label><textarea id="answer${i}" rows="2" oninput="updateProgress()"></textarea>`;
-form.appendChild(div);
+// honeypot check
+function checkHoneypot(){
+  const v = document.getElementById('hp_field').value || "";
+  return v.trim() === "";
+}
+// rate limiter (client-side) - max 5 submissions per hour
+function checkRateLimit(max=5, windowSeconds=3600){
+  const key = 'iq_submit_times_v1';
+  const now = Date.now();
+  let arr = JSON.parse(localStorage.getItem(key) || "[]");
+  arr = arr.filter(t => now - t < windowSeconds*1000);
+  if(arr.length >= max) return false;
+  arr.push(now);
+  localStorage.setItem(key, JSON.stringify(arr));
+  return true;
+}
+// disable paste on textareas to avoid auto-fill
+document.addEventListener('paste', (e)=>{
+  const tgt = e.target;
+  if(tgt && tgt.tagName && tgt.tagName.toLowerCase()==='textarea'){
+    e.preventDefault();
+    alert('การวางข้อความถูกปิดเพื่อป้องกันสแปม — กรุณาพิมพ์เอง');
+  }
 });
-updateProgress();
+
+/* -------------------------
+   Render questions and UI
+   ------------------------- */
+const openContainer = document.getElementById('openQs');
+const closedContainer = document.getElementById('closedQs');
+const totalQuestions = openQuestions.length + closedQuestions.length;
+
+function renderQuestions(){
+  openContainer.innerHTML = "<h3 class='small' style='margin-bottom:8px'>คำถามเปิด — ตอบให้ละเอียด (แต่ละข้อให้เหตุผล/ขั้นตอน)</h3>";
+  openQuestions.forEach((q,i)=>{
+    const wrapper = document.createElement('div');
+    wrapper.className = 'question-box';
+    wrapper.innerHTML = `<label>Q${i+1}: ${q}</label>
+      <textarea id="open${i}" maxlength="2500" placeholder="ตอบเป็นข้อ ๆ และอธิบายเหตุผล (ยิ่งละเอียด ยิ่งได้คะแนน)"></textarea>`;
+    openContainer.appendChild(wrapper);
+  });
+
+  closedContainer.innerHTML = "<h3 class='small' style='margin-bottom:8px'>คำถามปิด — pattern / sequence (ตอบตัวเลขหรือคำ)</h3>";
+  closedQuestions.forEach((c,i)=>{
+    const idx = i+openQuestions.length;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'question-box';
+    wrapper.innerHTML = `<label>Q${idx+1}: ${c.q}</label>
+      <input id="closed${i}" type="text" maxlength="20" placeholder="ตอบ (ตัวเลข)"></input>`;
+    closedContainer.appendChild(wrapper);
+  });
 }
 
+/* progress */
 function updateProgress(){
-let answered = 0;
-for(let i=0;i<totalQuestions;i++){
-if(document.getElementById(`answer${i}`).value.trim()!="") answered++;
-}
-document.getElementById("progress").innerText=`ตอบไป ${answered}/${totalQuestions} ข้อ`;
+  let answered=0;
+  for(let i=0;i<openQuestions.length;i++){
+    if(clean(document.getElementById(`open${i}`).value)!="") answered++;
+  }
+  for(let j=0;j<closedQuestions.length;j++){
+    if(clean(document.getElementById(`closed${j}`).value)!="") answered++;
+  }
+  const pct = Math.round(answered/totalQuestions*100);
+  document.getElementById('progress').innerText = `ตอบไป ${answered}/${totalQuestions} ข้อ (${pct}%)`;
 }
 
-function submitTest(){
-answers = [];
-for(let i=0;i<totalQuestions;i++){
-answers.push(document.getElementById(`answer${i}`).value.trim());
+/* captcha */
+let captchaAnswer = null;
+function makeCaptcha(){
+  const a = Math.floor(Math.random()*8)+2;
+  const b = Math.floor(Math.random()*8)+2;
+  captchaAnswer = a + b;
+  document.getElementById('captchaQ').innerText = `${a} + ${b} = ?`;
 }
-// ----- ประเมิน skill -----
-let skill = {
-Logic: Math.floor(Math.random()*100),
-Math: Math.floor(Math.random()*100),
-Verbal: Math.floor(Math.random()*100),
-Spatial: Math.floor(Math.random()*100),
-Memory: Math.floor(Math.random()*100),
-Creativity: Math.floor(Math.random()*100)
-};
-let iq = 50 + Math.round((skill.Logic+skill.Math+skill.Verbal+skill.Spatial+skill.Memory+skill.Creativity)/6*2);
+document.getElementById('age').addEventListener('input', e=>document.getElementById('ageVal').innerText = e.target.value);
+document.getElementById('height').addEventListener('input', e=>document.getElementById('heightVal').innerText = e.target.value);
+document.getElementById('weight').addEventListener('input', e=>document.getElementById('weightVal').innerText = e.target.value);
 
-document.getElementById("test").style.display="none";
-document.getElementById("result").style.display="block";
-
-// ----- สร้าง radar chart -----
-const ctx = document.getElementById('iqChart').getContext('2d');
-new Chart(ctx,{
-type:'radar',
-data:{
-labels:["Logic","Math","Verbal","Spatial","Memory","Creativity"],
-datasets:[{
-label:`IQ ประมาณ: ${iq}`,
-data:[skill.Logic,skill.Math,skill.Verbal,skill.Spatial,skill.Memory,skill.Creativity],
-backgroundColor:'rgba(54,162,235,0.2)',
-borderColor:'rgba(54,162,235,1)',
-borderWidth:2,
-pointBackgroundColor:'rgba(54,162,235,1)'
-}]
-},
-options:{
-scales:{r:{min:0,max:100,ticks:{stepSize:20}}},
-plugins:{legend:{position:'top'}}
-}
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  // reset rate-limit check (visual) not required
+  if(!checkRateLimit(1000,1)){} // noop
+  renderQuestions();
+  makeCaptcha();
+  document.getElementById('testSection').style.display='block';
+  window.scrollTo({top:document.getElementById('testSection').offsetTop-20, behavior:'smooth'});
+  // attach progress listeners
+  setTimeout(()=> {
+    for(let i=0;i<openQuestions.length;i++){
+      document.getElementById(`open${i}`).addEventListener('input', updateProgress);
+    }
+    for(let j=0;j<closedQuestions.length;j++){
+      document.getElementById(`closed${j}`).addEventListener('input', updateProgress);
+    }
+  },50);
 });
 
-document.getElementById("summary").innerHTML=`<p>ตอบคำถามทั้งหมด ${totalQuestions} ข้อแล้ว</p>`;
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  location.reload();
+});
+
+document.getElementById('previewBtn').addEventListener('click', ()=>{
+  // allow preview without rate-limit/honeypot but require answers
+  if(!validateAll(false)) return;
+  const scored = evaluateAnswers();
+  renderResult(scored, true);
+});
+
+/* -------------------------
+   Validation
+   ------------------------- */
+function validateAll(requireCaptcha=true){
+  // honeypot
+  if(!checkHoneypot()){
+    alert('ตรวจพบพฤติกรรมบอท (honeypot)');
+    return false;
+  }
+  // must answer all
+  for(let i=0;i<openQuestions.length;i++){
+    if(clean(document.getElementById(`open${i}`).value)===""){
+      alert(`กรุณาตอบคำถามเปิดข้อที่ ${i+1}`);
+      document.getElementById(`open${i}`).focus();
+      return false;
+    }
+  }
+  for(let j=0;j<closedQuestions.length;j++){
+    if(clean(document.getElementById(`closed${j}`).value)===""){
+      alert(`กรุณาตอบคำถามปิดข้อที่ ${j+1}`);
+      document.getElementById(`closed${j}`).focus();
+      return false;
+    }
+  }
+  // captcha
+  if(requireCaptcha){
+    const a = Number(clean(document.getElementById('captchaA').value));
+    if(a !== captchaAnswer){
+      alert('ยืนยัน captcha ไม่ถูกต้อง');
+      return false;
+    }
+  }
+  // rate limit (max 10 per hour)
+  if(!checkRateLimit(10,3600)){
+    alert('ส่งบ่อยเกินไป ลองอีกครั้งในภายหลัง');
+    return false;
+  }
+  return true;
 }
+
+/* -------------------------
+   Scoring heuristics (deterministic)
+   ------------------------- */
+/*
+ Approach:
+ - Closed questions: exact match (numeric), gives Math+Logic points.
+ - Open questions: heuristic rubric:
+    * lengthScore: words count (more ข้อความ = more explanation) capped
+    * structureScore: presence of numbered steps, "if"/"ถ้า"/"ถ้าพบ", connectors (because/เพราะ), keywords for contingency/mitigation
+    * depthScore: presence of alternatives, risks, tradeoffs, KPI, testing, recovery
+    * creativityScore: presence of novel ideas / alternatives
+ - For each open Q we compute 0-100 and map to skill contributions.
+ - Finally compute six skill averages from mapping rules -> map average skill (0-100) to IQ range 50-270 via IQ = 50 + avg*2.2
+*/
+function wordsCount(s){
+  if(!s) return 0;
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+function containsAny(s, arr){
+  const low = s.toLowerCase();
+  return arr.some(x=> low.includes(x));
+}
+
+function scoreOpenAnswer(text, qIndex){
+  const s = clean(text);
+  const wc = wordsCount(s);
+  // length score (0-30)
+  const lengthScore = Math.min(30, Math.round(Math.log10(Math.max(1,wc))*10 * Math.min(1,wc/30)));
+  // structure: numbered steps (1., ข้อ 1, step), connectors (if/ถ้า, because/เพราะ, however/แต่)
+  const stepPattern = /(^\d+\.|\bขั้นตอน\b|\bข้อ\b|\bstep\b|\b1\)|\b1\.)/i;
+  const hasSteps = stepPattern.test(text) ? 1 : 0;
+  const connectors = containsAny(text, ["ถ้า","หาก","if","because","เพราะ","ดังนั้น","ดังนั้น","however","แต่","หรือ"]);
+  const structureScore = (hasSteps?15:0) + (connectors?10:0);
+  // depth: mention of risk / mitigation / test / kpi / recovery / alternative
+  const depthKeywords = ["risk","ความเสี่ยง","mitigat","ทดสอบ","recovery","กู้คืน","ทดสอบ","KPI","วัดผล","alternative","ทางเลือก","เป้าหมาย","priority","ลำดับความสำคัญ"];
+  const depthHits = containsAny(text, depthKeywords) ? 1 : 0;
+  const depthScore = depthHits ? 25 : 0;
+  // creativity: novel, innovate, unique, new, คิดค้น
+  const creativeKeywords = ["ไอเดีย","novel","คิดค้น","สร้างสรรค์","innov","unique","นวัตกรรม","alternative"];
+  const creativeScore = containsAny(text, creativeKeywords) ? 20 : 0;
+
+  // Penalty for extremely short answers
+  const shortPenalty = wc < 12 ? Math.round((12 - wc)/12*20) : 0;
+
+  // total 0-100
+  let total = lengthScore + structureScore + depthScore + creativeScore - shortPenalty;
+  total = Math.max(0, Math.min(100, total));
+  // assign skill weights depending on question type:
+  // mapping: different open questions emphasize different skills
+  // We'll return object {score, contributions:{Logic,Math,Verbal,Spatial,Memory,Creativity}}
+  const base = total;
+  const contributions = {Logic:0,Math:0,Verbal:0,Spatial:0,Memory:0,Creativity:0};
+  // heuristics per question:
+  if(qIndex===0){ // emergency decision: logic, spatial (planning), memory (steps), creativity (contingency)
+    contributions.Logic = Math.round(base*0.35);
+    contributions.Spatial = Math.round(base*0.25);
+    contributions.Memory = Math.round(base*0.15);
+    contributions.Creativity = Math.round(base*0.15);
+    contributions.Verbal = Math.round(base*0.05);
+    contributions.Math = Math.round(base*0.05);
+  } else if(qIndex===1){ // backup system: logic, memory, math (architect), verbal (explain)
+    contributions.Logic = Math.round(base*0.30);
+    contributions.Math = Math.round(base*0.20);
+    contributions.Memory = Math.round(base*0.15);
+    contributions.Verbal = Math.round(base*0.20);
+    contributions.Creativity = Math.round(base*0.10);
+    contributions.Spatial = Math.round(base*0.05);
+  } else if(qIndex===2){ // ethics: verbal, logic, creativity
+    contributions.Verbal = Math.round(base*0.40);
+    contributions.Logic = Math.round(base*0.30);
+    contributions.Creativity = Math.round(base*0.15);
+    contributions.Memory = Math.round(base*0.10);
+    contributions.Math = Math.round(base*0.05);
+  } else if(qIndex===3){ // event planning: spatial, logic, memory
+    contributions.Spatial = Math.round(base*0.35);
+    contributions.Logic = Math.round(base*0.30);
+    contributions.Memory = Math.round(base*0.15);
+    contributions.Verbal = Math.round(base*0.10);
+    contributions.Creativity = Math.round(base*0.10);
+  } else if(qIndex===4){ // team conflict: verbal, logic, creativity
+    contributions.Verbal = Math.round(base*0.40);
+    contributions.Logic = Math.round(base*0.30);
+    contributions.Creativity = Math.round(base*0.15);
+    contributions.Memory = Math.round(base*0.10);
+    contributions.Math = Math.round(base*0.05);
+  } else if(qIndex===5){ // innovation: creativity, verbal, logic
+    contributions.Creativity = Math.round(base*0.45);
+    contributions.Verbal = Math.round(base*0.25);
+    contributions.Logic = Math.round(base*0.15);
+    contributions.Math = Math.round(base*0.10);
+    contributions.Memory = Math.round(base*0.05);
+  } else if(qIndex===6){ // contingency: logic, creativity, math
+    contributions.Logic = Math.round(base*0.35);
+    contributions.Creativity = Math.round(base*0.25);
+    contributions.Math = Math.round(base*0.20);
+    contributions.Verbal = Math.round(base*0.10);
+    contributions.Memory = Math.round(base*0.10);
+  } else if(qIndex===7){ // scientific check: logic, memory, math
+    contributions.Logic = Math.round(base*0.40);
+    contributions.Memory = Math.round(base*0.25);
+    contributions.Math = Math.round(base*0.20);
+    contributions.Verbal = Math.round(base*0.10);
+  } else if(qIndex===8){ // puzzle: logic, spatial, math
+    contributions.Logic = Math.round(base*0.40);
+    contributions.Spatial = Math.round(base*0.25);
+    contributions.Math = Math.round(base*0.20);
+    contributions.Verbal = Math.round(base*0.10);
+  } else { // Q10 decision under time: logic, verbal, memory
+    contributions.Logic = Math.round(base*0.40);
+    contributions.Verbal = Math.round(base*0.30);
+    contributions.Memory = Math.round(base*0.20);
+    contributions.Creativity = Math.round(base*0.10);
+  }
+
+  return {score: total, contributions};
+}
+
+// closed question scoring: exact numeric match (allow small whitespace)
+function scoreClosedAnswer(input, index){
+  const ans = clean(input).replace(/\s+/g,'');
+  const key = closedQuestions[index].ans.replace(/\s+/g,'');
+  // allow numeric parse
+  if(ans === key) return {correct:true, points:10}; // each closed q worth 10 points to Math+Logic
+  // allow numeric equality if number-like
+  const n1 = Number(ans);
+  const n2 = Number(key);
+  if(!isNaN(n1) && !isNaN(n2) && n1===n2) return {correct:true, points:10};
+  return {correct:false, points:0};
+}
+
+/* -------------------------
+   Evaluate all answers
+   ------------------------- */
+function evaluateAnswers(){
+  // gather profile
+  const profile = {
+    name: "Swiss Russameekiattisak",
+    age: Number(document.getElementById('age').value),
+    height: Number(document.getElementById('height').value),
+    weight: Number(document.getElementById('weight').value),
+    gender: clean(document.getElementById('gender').value)
+  };
+
+  // init skill accumulators (0- sum weights)
+  let accum = {Logic:0,Math:0,Verbal:0,Spatial:0,Memory:0,Creativity:0};
+  let maxPossible = {Logic:0,Math:0,Verbal:0,Spatial:0,Memory:0,Creativity:0};
+
+  // open questions scoring
+  for(let i=0;i<openQuestions.length;i++){
+    const ans = clean(document.getElementById(`open${i}`).value);
+    const res = scoreOpenAnswer(ans, i);
+    // add contributions & update maxPossible by same weights (assuming max 100)
+    for(const k of Object.keys(accum)){
+      accum[k] += res.contributions[k];
+      maxPossible[k] += ( (i===0)?35:0 ); // we'll rather sum weights differently below
+    }
+    // Actually we will compute maxPossible by summing the theoretical full 100 weighted per question
+  }
+
+  // Compute maxPossible properly: for each open question, its contributions sum equals ~100 (sum weights)
+  // We'll recompute accumulated using per-question weights, but easier approach:
+  // For each open question, compute contributions for full-score (score=100) using same mapping
+  let maxAccum = {Logic:0,Math:0,Verbal:0,Spatial:0,Memory:0,Creativity:0};
+  for(let i=0;i<openQuestions.length;i++){
+    const fake = scoreOpenAnswer("x".repeat(200), i); // this will create some length; but better generate base=100 directly
+    // Instead compute mapping weights by dividing contributions by total score then scale to 100
+    const sample = scoreOpenAnswer("This is a test with many words and steps 1. step 2. step 3. if then because test alternative KPI", i);
+    const sumContrib = Object.values(sample.contributions).reduce((a,b)=>a+b,0) || 1;
+    // Determine weights
+    for(const k of Object.keys(maxAccum)){
+      const weight = sample.contributions[k]/sumContrib;
+      maxAccum[k] += Math.round(weight*100);
+    }
+  }
+
+  // Now recompute actual accum properly by calling scoreOpenAnswer and using the same weight distribution
+  // Reset accum
+  accum = {Logic:0,Math:0,Verbal:0,Spatial:0,Memory:0,Creativity:0};
+  for(let i=0;i<openQuestions.length;i++){
+    const ans = clean(document.getElementById(`open${i}`).value);
+    const scored = scoreOpenAnswer(ans, i);
+    const sample = scoreOpenAnswer("This is a test with many words and steps 1. step 2. step 3. if then because test alternative KPI", i);
+    const sumSample = Object.values(sample.contributions).reduce((a,b)=>a+b,0) || 1;
+    for(const k of Object.keys(accum)){
+      const weight = sample.contributions[k]/sumSample;
+      accum[k] += Math.round(weight * scored.score);
+    }
+  }
+
+  // closed questions: each correct -> add to Math & Logic
+  let closedCorrect = 0;
+  for(let j=0;j<closedQuestions.length;j++){
+    const ans = clean(document.getElementById(`closed${j}`).value);
+    const r = scoreClosedAnswer(ans, j);
+    if(r.correct){
+      closedCorrect++;
+      // give 10 points distributed: Math 6, Logic 4
+      accum.Math += 6 * 10 / 10; // 6
+      accum.Logic += 4 * 10 / 10; // 4
+    }
+  }
+
+  // normalize accum to 0-100 per skill
+  // For open questions, each question contributes up to 100 distributed across skills (we used scored.score up to 100)
+  // So max per skill from opens = number_of_open * 100 (if all went to same skill) but our weight distribution spreads it
+  // We'll compute theoretical max per skill by simulating perfect answers:
+  let perfectAccum = {Logic:0,Math:0,Verbal:0,Spatial:0,Memory:0,Creativity:0};
+  for(let i=0;i<openQuestions.length;i++){
+    const sample = scoreOpenAnswer("This is a test with many words and steps 1. step 2. step 3. if then because test alternative KPI", i);
+    const sumSample = Object.values(sample.contributions).reduce((a,b)=>a+b,0) || 1;
+    for(const k of Object.keys(perfectAccum)){
+      const weight = sample.contributions[k]/sumSample;
+      perfectAccum[k] += Math.round(weight * 100);
+    }
+  }
+  // add closed question perfect contribution:
+  // closedQuestions.length * (Math:+6, Logic:+4) -> per question we added 6 and 4 above (for correct)
+  const perfectClosedPerQ = {Math:6, Logic:4};
+  perfectAccum.Math += perfectClosedPerQ.Math * closedQuestions.length;
+  perfectAccum.Logic += perfectClosedPerQ.Logic * closedQuestions.length;
+
+  // Now map current accum to 0-100 scale per skill
+  const skillPercent = {};
+  for(const k of Object.keys(accum)){
+    const maxv = perfectAccum[k] || 1;
+    skillPercent[k] = Math.round( Math.min(100, accum[k] / maxv * 100) );
+  }
+
+  // Final IQ mapping: avgSkill 0-100 -> IQ 50-270 (linear)
+  const avgSkill = (skillPercent.Logic + skillPercent.Math + skillPercent.Verbal + skillPercent.Spatial + skillPercent.Memory + skillPercent.Creativity)/6;
+  const iq = Math.round(50 + avgSkill * 2.2); // 50 + avg*2.2 -> avg=100 => 270
+
+  // Build breakdown text per question (short)
+  const openDetails = [];
+  for(let i=0;i<openQuestions.length;i++){
+    const ans = clean(document.getElementById(`open${i}`).value);
+    const scored = scoreOpenAnswer(ans, i);
+    openDetails.push({q:openQuestions[i], score:scored.score});
+  }
+  const closedDetails = [];
+  for(let j=0;j<closedQuestions.length;j++){
+    const ans = clean(document.getElementById(`closed${j}`).value);
+    const r = scoreClosedAnswer(ans,j);
+    closedDetails.push({q:closedQuestions[j].q, answer:ans, correct:r.correct});
+  }
+
+  return {
+    profile, skillPercent, iq, avgSkill, openDetails, closedDetails
+  };
+}
+
+/* -------------------------
+   Render result (radar + breakdown)
+   ------------------------- */
+let radarChart = null;
+function renderResult(res, preview=false){
+  document.getElementById('resultSection').style.display='block';
+  document.getElementById('iqText').innerText = `IQ: ${res.iq}  (ประมาณ)`;
+  // radar
+  const ctx = document.getElementById('iqChart').getContext('2d');
+  const data = [res.skillPercent.Logic, res.skillPercent.Math, res.skillPercent.Verbal, res.skillPercent.Spatial, res.skillPercent.Memory, res.skillPercent.Creativity];
+  if(radarChart) radarChart.destroy();
+  radarChart = new Chart(ctx, {
+    type:'radar',
+    data:{
+      labels:["Logic","Math","Verbal","Spatial","Memory","Creativity"],
+      datasets:[{
+        label:`IQ ${res.iq}`,
+        data:data,
+        backgroundColor:'rgba(43,140,255,0.16)',
+        borderColor:'rgba(43,140,255,1)',
+        borderWidth:2,
+        pointBackgroundColor:'rgba(43,140,255,1)'
+      }]
+    },
+    options:{
+      scales:{r:{min:0,max:100,ticks:{stepSize:20}}},
+      plugins:{legend:{display:false}}
+    }
+  });
+
+  // breakdown
+  const br = document.getElementById('breakdown');
+  br.innerHTML = `<div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:240px"><strong>สกิล (เปอร์เซ็นต์)</strong>
+      <ul class="small" style="margin:8px 0 0 14px">
+        <li>Logic: ${res.skillPercent.Logic}%</li>
+        <li>Math: ${res.skillPercent.Math}%</li>
+        <li>Verbal: ${res.skillPercent.Verbal}%</li>
+        <li>Spatial: ${res.skillPercent.Spatial}%</li>
+        <li>Memory: ${res.skillPercent.Memory}%</li>
+        <li>Creativity: ${res.skillPercent.Creativity}%</li>
+      </ul>
+    </div>
+    <div style="flex:1;min-width:240px"><strong>สรุปคำถาม</strong>
+      <div class="small" style="margin-top:6px"><strong>คำถามเปิด (score)</strong><ol id="od"></ol></div>
+      <div class="small" style="margin-top:8px"><strong>คำถามปิด (ถูก/ผิด)</strong><ol id="cd"></ol></div>
+    </div>
+  </div>`;
+
+  const od = document.getElementById('od');
+  res.openDetails.forEach((o,i)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>Q${i+1}</strong> — score: ${o.score}/100`;
+    od.appendChild(li);
+  });
+  const cd = document.getElementById('cd');
+  res.closedDetails.forEach((c,i)=>{
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>Q${openQuestions.length + i + 1}</strong> — คำถาม: ${c.q} — ตอบ: ${c.answer || '(ว่าง)'} — ${c.correct ? '<span style="color:green">ถูก</span>' : '<span style="color:#b03">ผิด</span>'}`;
+    cd.appendChild(li);
+  });
+
+  // add explanation text
+  document.getElementById('detailText').innerText = `คะแนนมาจากการวิเคราะห์คำตอบเปิดเชิงเหตุผล (ความลึก โครงสร้าง ความเสี่ยง ตัวเลือก) และคำถามปิดแบบ pattern.`;
+  if(!preview){
+    // scroll to result
+    window.scrollTo({top:document.getElementById('resultSection').offsetTop-10, behavior:'smooth'});
+  }
+}
+
+/* -------------------------
+   Submit handler
+   ------------------------- */
+document.getElementById('submitBtn').addEventListener('click', ()=>{
+  // validate + captcha + honeypot + rate-limit
+  if(!validateAll(true)) return;
+  // evaluate
+  const res = evaluateAnswers();
+  renderResult(res, false);
+});
+
+/* -------------------------
+   init
+   ------------------------- */
+updateProgress();
 </script>
 </body>
 </html>
